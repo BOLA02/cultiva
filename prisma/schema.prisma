@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  firstName          String
+  lastName           String
+  email              String              @unique
+  phone              String              @unique
+  password           String
+  role               UserRole            @default(BUYER)
+  status             UserStatus          @default(PENDING)
+  isVerified         Boolean             @default(false)
+  verificationStatus VerificationStatus  @default(PENDING)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  auditLogs          AuditLog[]
+  buyerProfile       BuyerProfile?
+  cooperativeProfile CooperativeProfile?
+  dealerProfile      DealerProfile?
+  farmerProfile      FarmerProfile?
+  receivedMessages   Message[]           @relation("ReceivedMessages")
+  sentMessages       Message[]           @relation("SentMessages")
+  notifications      Notification[]
+  writtenReviews     Review[]            @relation("WrittenReviews")
+  receivedReviews    Review[]            @relation("ReceivedReviews")
+  transporterProfile TransporterProfile?
+
+  @@map("users")
+}
+
+model FarmerProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  nin              String?  @unique
+  farmSizeHectares Float?
+  experienceYears  Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  farms            Farm[]
+
+  @@map("farmer_profiles")
+}
+
+model BuyerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  companyName     String?
+  businessTin     String?  @unique
+  shippingAddress String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders          Order[]
+
+  @@map("buyer_profiles")
+}
+
+model TransporterProfile {
+  id            String         @id @default(uuid())
+  userId        String         @unique
+  licenseNumber String?        @unique
+  vehicleType   String?
+  maxCapacityKg Float?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  transportJobs TransportJob[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transporter_profiles")
+}
+
+model DealerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  storeName       String
+  licenseNumber   String?  @unique
+  physicalAddress String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dealer_profiles")
+}
+
+model CooperativeProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  registrationNo  String   @unique
+  memberCount     Int      @default(1)
+  operatingRegion String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cooperative_profiles")
+}
+
+model Farm {
+  id                  String         @id @default(uuid())
+  farmerProfileId     String
+  name                String
+  locationCoordinates String?
+  address             String
+  sizeHectares        Float
+  soilType            String?
+  status              FarmStatus     @default(PENDING_VERIFICATION)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  crops               Crop[]
+  documents           FarmDocument[]
+  farmerProfile       FarmerProfile  @relation(fields: [farmerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("farms")
+}
+
+model Crop {
+  id                   String      @id @default(uuid())
+  farmId               String
+  name                 String
+  variety              String?
+  plantedDate          DateTime
+  estimatedHarvestDate DateTime
+  actualHarvestDate    DateTime?
+  status               CropStatus  @default(PLANTED)
+  yieldEstimateQty     Float?
+  yieldUnit            String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  images               CropImage[]
+  farm                 Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  listings             Listing[]
+
+  @@map("crops")
+}
+
+model FarmDocument {
+  id        String             @id @default(uuid())
+  farmId    String
+  name      String
+  fileUrl   String
+  status    VerificationStatus @default(PENDING)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  farm      Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@map("farm_documents")
+}
+
+model CropImage {
+  id        String   @id @default(uuid())
+  cropId    String
+  imageUrl  String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  crop      Crop     @relation(fields: [cropId], references: [id], onDelete: Cascade)
+
+  @@map("crop_images")
+}
+
+model Listing {
+  id              String        @id @default(uuid())
+  cropId          String
+  title           String
+  description     String
+  pricePerUnit    Float
+  currency        String        @default("NGN")
+  unitType        String
+  availableQty    Float
+  minimumOrderQty Float         @default(1.0)
+  status          ListingStatus @default(DRAFT)
+  negotiable      Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  crop            Crop          @relation(fields: [cropId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
+
+  @@map("listings")
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  buyerProfileId  String
+  totalAmount     Float
+  currency        String        @default("NGN")
+  status          OrderStatus   @default(PENDING)
+  shippingAddress String
+  notes           String?
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  items           OrderItem[]
+  buyerProfile    BuyerProfile  @relation(fields: [buyerProfileId], references: [id])
+  payment         Payment?
+  reviews         Review[]
+  transportJob    TransportJob?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  listingId   String
+  quantity    Float
+  priceAtSale Float
+  createdAt   DateTime @default(now())
+  listing     Listing  @relation(fields: [listingId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model TransportJob {
+  id                   String              @id @default(uuid())
+  orderId              String              @unique
+  transporterProfileId String?
+  pickupAddress        String
+  deliveryAddress      String
+  estimatedPickup      DateTime?
+  estimatedDelivery    DateTime?
+  actualPickup         DateTime?
+  actualDelivery       DateTime?
+  priceCharge          Float
+  currency             String              @default("NGN")
+  status               TransportStatus     @default(PENDING)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  order                Order               @relation(fields: [orderId], references: [id])
+  transporterProfile   TransporterProfile? @relation(fields: [transporterProfileId], references: [id], onDelete: Restrict)
+
+  @@map("transport_jobs")
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  orderId        String        @unique
+  transactionRef String        @unique
+  amount         Float
+  currency       String        @default("NGN")
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  order          Order         @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  orderId    String
+  reviewerId String
+  targetId   String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation("WrittenReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
+  target     User     @relation("ReceivedReviews", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, targetId])
+  @@map("reviews")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  ADMIN
+  FARMER
+  BUYER
+  TRANSPORTER
+  DEALER
+  COOPERATIVE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  SOLD
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum TransportStatus {
+  PENDING
+  ACCEPTED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum FarmStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  SUSPENDED
+}
+
+enum CropStatus {
+  PLANTED
+  GROWING
+  DISEASED
+  HARVESTED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  MOBILE_MONEY
+  WALLET
+}

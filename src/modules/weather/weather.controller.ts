@@ -1,0 +1,2 @@
+import { NextFunction, Request, Response } from 'express'; import { WeatherService } from './weather.service'; const service = new WeatherService();
+export class WeatherController { forecast = async (req: Request, res: Response, next: NextFunction) => { try { const { latitude, longitude, days } = req.query as any; res.json({ success: true, data: await service.forecast(Number(latitude), Number(longitude), Number(days)) }); } catch(e) { next(e); } }; }

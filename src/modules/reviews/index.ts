@@ -1,0 +1,1 @@
+export { nestedReviewRoutes, userReviewRoutes } from './reviews.routes';

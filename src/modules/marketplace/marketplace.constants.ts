@@ -1,0 +1,2 @@
+export const DEFAULT_LISTING_CURRENCY = 'NGN';
+export const DEFAULT_MINIMUM_ORDER_QTY = 1.0;

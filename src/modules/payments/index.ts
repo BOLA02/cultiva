@@ -1,0 +1,1 @@
+export { nestedPaymentRoutes, paymentRoutes } from './payments.routes';

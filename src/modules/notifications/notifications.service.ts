@@ -1,0 +1,7 @@
+import { prisma } from '../../config/db'; import { AppError } from '../../common/AppError'; import { HttpStatus } from '../../common/http-status';
+export class NotificationsService {
+  async list(userId: string, query: { unreadOnly?: string; page: number; limit: number }) { const where = { userId, ...(query.unreadOnly === 'true' ? { isRead: false } : {}) }; const [data, total, unread] = await prisma.$transaction([prisma.notification.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (query.page - 1) * query.limit, take: query.limit }), prisma.notification.count({ where }), prisma.notification.count({ where: { userId, isRead: false } })]); return { data, meta: { page: query.page, limit: query.limit, total, unread, totalPages: Math.ceil(total / query.limit) } }; }
+  async markRead(userId: string, id: string) { const result = await prisma.notification.updateMany({ where: { id, userId }, data: { isRead: true } }); if (!result.count) throw new AppError('Notification not found.', HttpStatus.NOT_FOUND); return prisma.notification.findUnique({ where: { id } }); }
+  markAllRead(userId: string) { return prisma.notification.updateMany({ where: { userId, isRead: false }, data: { isRead: true } }); }
+  async remove(userId: string, id: string) { const result = await prisma.notification.deleteMany({ where: { id, userId } }); if (!result.count) throw new AppError('Notification not found.', HttpStatus.NOT_FOUND); }
+}

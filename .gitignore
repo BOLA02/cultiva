@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+apps/*/dist/
+*.tsbuildinfo
+coverage/
+*.log
+debug-output.txt
+.vscode/

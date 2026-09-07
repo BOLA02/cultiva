@@ -1,0 +1,1 @@
+import { Router } from 'express'; import validate from '../../middlewares/validate.middleware'; import { WeatherController } from './weather.controller'; import { forecastSchema } from './weather.validation'; const router = Router(); const controller = new WeatherController(); router.get('/forecast', validate(forecastSchema), controller.forecast); export default router;
