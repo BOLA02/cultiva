@@ -25,12 +25,23 @@ import { notFound } from './middlewares/not-found.middleware';
 
 const app = express();
 
-app.use(cors(
-  {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+const allowedOrigins = [
+  "https://startoview.ng",
+  "https://www.startoview.ng",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow requests with no origin (like curl, mobile apps, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Not allowed by CORS: ${origin}`));
+    }
+  },
   credentials: true,
-  }
-));
+}));
 app.use(helmet());
 app.use(compression());
 app.use(express.json({ limit: '10mb', verify: (req, _res, buffer) => { (req as any).rawBody = buffer.toString('utf8'); } }));
