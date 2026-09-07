@@ -1,13 +1,13 @@
 {
-       "$schema": "https://openapi.vercel.sh/vercel.json",
-       "rewrites": [
-         {
-           "source": "/api/:path*",
-           "destination": "https://YOUR-RENDER-SERVICE.onrender.com/api/:path*"
-         },
-         {
-           "source": "/(.*)",
-           "destination": "/index.html"
-         }
-       ]
-     }
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://cultiva-5qp0.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
