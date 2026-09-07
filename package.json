@@ -13,6 +13,7 @@
     "build:all": "npm run build && npm run build --workspace @cultiva/web",
     "build:web": "npm run build --workspace @cultiva/web",
     "start": "node dist/server.js",
+    "start:render": "prisma migrate deploy && tsx prisma/seed.ts && node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -22,6 +23,9 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
@@ -57,7 +61,7 @@
     "prisma": "^7.9.1",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.23.5",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
     ,"concurrently": "^9.2.1"
   }
 }
