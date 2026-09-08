@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://cultiva-5qp0.onrender.com/api/:path*"
+      "destination": "https://cultiva-txyk.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
